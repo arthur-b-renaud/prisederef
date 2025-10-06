@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Espace recruteur - eXalt{% endblock %}
+
+{% block content %}
+<h1>Espace recruteur</h1>
+
+<form method="post" action="">
+  {% csrf_token %}
+  <h3>Ajouter un candidat</h3>
+  <label for="candidate_name">Nom du candidat</label>
+  <input id="candidate_name" name="candidate_name" type="text" required />
+  <button type="submit">Ajouter</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Candidat</th>
+      <th>Références</th>
+      <th>Invitation</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in candidates %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td>{{ c.num_refs }}/3</td>
+      <td>
+        <a href="/references/{{ c.invite_token }}/" target="_blank">Lien d'invitation</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Aucun candidat.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if latest_references %}
+<div style="margin-top: 3rem;">
+  <h2>Dernières références créées</h2>
+  <div style="max-width: 100%; margin: 0 auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidat</th>
+          <th>Référent</th>
+          <th>Entreprise</th>
+          <th>Email</th>
+          <th>Date de création</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reference in latest_references %}
+        <tr>
+          <td>{{ reference.candidate.name }}</td>
+          <td>{{ reference.referent.name }}</td>
+          <td>{{ reference.corporation.name }}</td>
+          <td>{{ reference.referent.email }}</td>
+          <td>{{ reference.created_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div style="margin-top: 3rem;">
+  <p style="color: #6b7280; font-style: italic;">Aucune référence créée pour le moment.</p>
+</div>
+{% endif %}
+{% endblock %}

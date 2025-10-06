@@ -1,23 +1,70 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 2rem; }
-      .wrap { max-width: 720px; margin: 0 auto; text-align: center; }
-      img { height: 96px; }
-      a { color: #2563eb; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <img alt="Logo" src="https://images.prismic.io/exalt/ZlTQKaWtHYXtT1CW_HEADER_Logo.png?auto=format%2Ccompress&fit=max&w=96" />
-      <h1>Welcome</h1>
-      <p>Django + Postgres + Redis + Celery</p>
-      <p><a href="/health/">Health check</a></p>
+{% extends "base.html" %}
+
+{% block title %}Accueil - eXalt{% endblock %}
+
+{% block content %}
+<div class="text-center">
+  <h1>Tableau de bord</h1>
+  <p class="mb-6">Bienvenue sur la plateforme de prise de références eXalt</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+  <!-- Candidates Section -->
+  <div>
+    <h2>Gestion des candidats</h2>
+    <form method="post" action="{% url 'recruiter_home' %}" style="margin-bottom: 1.5rem;">
+      {% csrf_token %}
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <input name="candidate_name" type="text" placeholder="Nom du candidat" required style="flex: 1;" />
+        <button type="submit">Ajouter</button>
+      </div>
+    </form>
+    
+    <div style="background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 1rem;">
+      <h3>Candidats ({{ candidates|length }})</h3>
+      {% if candidates %}
+        <div style="max-height: 300px; overflow-y: auto;">
+          {% for candidate in candidates %}
+            <div style="padding: 0.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+              <span>{{ candidate.name }}</span>
+              <span style="color: #6b7280; font-size: 0.9rem;">{{ candidate.num_refs }}/3</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: #6b7280; font-style: italic;">Aucun candidat pour le moment.</p>
+      {% endif %}
     </div>
-  </body>
-</html>
+  </div>
+
+  <!-- References Section -->
+  <div>
+    <h2>Dernières références</h2>
+    <div style="background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 1rem;">
+      {% if latest_references %}
+        <div style="max-height: 300px; overflow-y: auto;">
+          {% for reference in latest_references %}
+            <div style="padding: 0.5rem; border-bottom: 1px solid #e5e7eb;">
+              <div style="font-weight: 600; color: #1f2937;">{{ reference.candidate.name }}</div>
+              <div style="color: #6b7280; font-size: 0.9rem;">
+                {{ reference.referent.name }} @ {{ reference.corporation.name }}
+              </div>
+              <div style="color: #9ca3af; font-size: 0.8rem;">
+                {{ reference.created_at|date:"d/m/Y H:i" }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: #6b7280; font-style: italic;">Aucune référence créée pour le moment.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+  <a href="{% url 'recruiter_home' %}" style="background: #5853ff; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+    Gérer les candidats →
+  </a>
+</div>
+{% endblock %}

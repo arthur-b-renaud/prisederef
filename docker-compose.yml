@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   web:
     build: .
@@ -11,15 +9,38 @@ services:
     depends_on:
       - db
       - redis
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          ignore:
+            - .git/
+            - node_modules/
+            - __pycache__/
+            - "*.pyc"
 
   worker:
     build: .
+    user: "1000:1000"
     command: celery -A core worker -l info
     env_file:
       - .env
     depends_on:
       - db
       - redis
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          ignore:
+            - .git/
+            - node_modules/
+            - __pycache__/
+            - "*.pyc"
 
   db:
     image: postgres:16-alpine

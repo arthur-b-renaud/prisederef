@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - eXalt{% endblock %}
+
+{% block content %}
+<div class="text-center">
+  <h1>Plateforme de prise de références eXalt</h1>
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div style="background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 4px; margin: 1rem auto; max-width: 400px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+  
+  <form method="post" style="max-width: 400px; margin: 2rem auto; text-align: left;">
+    {% csrf_token %}
+    <label for="login">Nom d'utilisateur</label>
+    <input id="login" name="login" type="text" autocomplete="username" required />
+    <label for="password">Mot de passe</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required />
+    <button type="submit">Se connecter</button>
+  </form>
+</div>
+{% endblock %}

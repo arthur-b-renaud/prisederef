@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Références - eXalt{% endblock %}
+
+{% block content %}
+<div class="text-center">
+  <h1>Gestion des Références</h1>
+  <p class="mb-6">Suivez vos interactions avec les référents</p>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div style="background: {% if message.tags == 'error' %}#fee2e2; color: #dc2626{% else %}#d1fae5; color: #065f46{% endif %}; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Add Interaction Form -->
+<div style="background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+  <h2>Enregistrer une interaction</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+      <div>
+        <label for="reference_id">Référence</label>
+        <select id="reference_id" name="reference_id" required>
+          <option value="">Sélectionner une référence</option>
+          {% for reference in references %}
+            <option value="{{ reference.id }}">
+              {{ reference.candidate.name }} - {{ reference.referent.name }} @ {{ reference.corporation.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="interaction_type">Type d'interaction</label>
+        <select id="interaction_type" name="interaction_type" required>
+          <option value="">Sélectionner le type</option>
+          <option value="email">Email</option>
+          <option value="phone">Téléphone</option>
+          <option value="meeting">Réunion</option>
+          <option value="other">Autre</option>
+        </select>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+      <label for="comment">Commentaire</label>
+      <textarea id="comment" name="comment" rows="3" placeholder="Détails de l'interaction..."></textarea>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+      <label for="feedback">Feedback du référent</label>
+      <select id="feedback" name="feedback">
+        <option value="">Pas de feedback</option>
+        <option value="positive">Positif</option>
+        <option value="neutral">Neutre</option>
+        <option value="negative">Négatif</option>
+      </select>
+    </div>
+    
+    <button type="submit" style="background: #5853ff; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer;">
+      Enregistrer l'interaction
+    </button>
+  </form>
+</div>
+
+<!-- References List -->
+<div style="background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 1.5rem;">
+  <h2>Références et Interactions</h2>
+  
+  {% if references %}
+    {% for reference in references %}
+      <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+          <div>
+            <h3 style="margin: 0; color: #1f2937;">{{ reference.candidate.name }}</h3>
+            <p style="margin: 0.25rem 0; color: #6b7280;">
+              {{ reference.referent.name }} @ {{ reference.corporation.name }}
+            </p>
+            <p style="margin: 0; color: #9ca3af; font-size: 0.9rem;">
+              {{ reference.referent.email }} • {{ reference.referent.phone }}
+            </p>
+          </div>
+          <div style="text-align: right; color: #6b7280; font-size: 0.9rem;">
+            Créée le {{ reference.created_at|date:"d/m/Y H:i" }}
+          </div>
+        </div>
+        
+        <!-- Interactions for this reference -->
+        {% if reference.interactions.all %}
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #f3f4f6;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #374151; font-size: 1rem;">Interactions ({{ reference.interactions.count }})</h4>
+            {% for interaction in reference.interactions.all %}
+              <div style="background: #f9fafb; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                  <div>
+                    <span style="font-weight: 600; color: #1f2937;">{{ interaction.get_interaction_type_display }}</span>
+                    {% if interaction.feedback %}
+                      <span style="background: {% if interaction.feedback == 'positive' %}#d1fae5; color: #065f46{% elif interaction.feedback == 'negative' %}#fee2e2; color: #dc2626{% else %}#fef3c7; color: #92400e{% endif %}; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">
+                        {{ interaction.get_feedback_display }}
+                      </span>
+                    {% endif %}
+                    {% if interaction.comment %}
+                      <p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.9rem;">{{ interaction.comment }}</p>
+                    {% endif %}
+                  </div>
+                  <div style="color: #9ca3af; font-size: 0.8rem;">
+                    {{ interaction.interaction_date|date:"d/m/Y H:i" }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #f3f4f6; color: #6b7280; font-style: italic;">
+            Aucune interaction enregistrée
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align: center; color: #6b7280; font-style: italic; padding: 2rem;">
+      Aucune référence disponible pour le moment.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

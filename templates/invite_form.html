@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter des références - eXalt{% endblock %}
+
+{% block extra_css %}
+    <style>
+  .reference-section { 
+    border: 1px solid #e5e7eb; 
+    border-radius: 8px; 
+    padding: 1.5rem; 
+    margin-bottom: 2rem; 
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .reference-title { 
+    color: #374151; 
+    font-size: 1.1rem; 
+    font-weight: 600; 
+    margin-bottom: 1rem; 
+  }
+  .required { color: #dc2626; }
+  .form-row { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 1rem; 
+  }
+  .form-row.full { 
+    grid-template-columns: 1fr; 
+  }
+  .add-reference-btn { 
+    background: #059669; 
+    margin-bottom: 2rem; 
+  }
+  .add-reference-btn:hover { 
+    background: #047857; 
+  }
+  .hidden { display: none; }
+  @media (max-width: 640px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+    </style>
+{% endblock %}
+
+{% block content %}
+<h1>Ajouter des références pour {{ candidate.name }}</h1>
+<p>Vous pouvez ajouter jusqu'à 3 références. <strong>Vous pouvez soumettre même si vous n'avez qu'une seule référence complète.</strong></p>
+<p>Les champs marqués d'un <span class="required">*</span> sont obligatoires pour chaque référence.</p>
+
+      {% if error %}
+<div class="error">{{ error }}</div>
+      {% endif %}
+
+<form method="post" action="{% url 'submit_reference' token=candidate.invite_token %}" id="referencesForm">
+        {% csrf_token %}
+  
+  <div id="referencesContainer">
+    <!-- References will be added dynamically here -->
+  </div>
+
+        <button type="button" id="addReferenceBtn" class="add-reference-btn">+ Ajouter un référent</button>
+        <button type="submit" id="submitBtn" style="display: none;">Envoyer les références</button>
+  
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let referenceCount = 0;
+  const maxReferences = 3;
+
+  function createReferenceSection(number) {
+    return `
+      <div class="reference-section" id="reference-${number}">
+        <div class="reference-title">Référence ${number}</div>
+        <div class="form-row">
+          <div>
+            <label for="referent_name_${number}">Nom du référent <span class="required">*</span></label>
+            <input id="referent_name_${number}" name="referent_name_${number}" type="text" required />
+          </div>
+          <div>
+            <label for="referent_email_${number}">Email du référent <span class="required">*</span></label>
+            <input id="referent_email_${number}" name="referent_email_${number}" type="email" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="referent_phone_${number}">Téléphone du référent <span class="required">*</span></label>
+            <input id="referent_phone_${number}" name="referent_phone_${number}" type="text" required />
+          </div>
+          <div>
+            <label for="corporation_name_${number}">Entreprise <span class="required">*</span></label>
+            <input id="corporation_name_${number}" name="corporation_name_${number}" type="text" required />
+          </div>
+        </div>
+        <div class="form-row full">
+          <div>
+            <label for="referent_role_${number}">Rôle du référent</label>
+            <input id="referent_role_${number}" name="referent_role_${number}" type="text" />
+          </div>
+        </div>
+        <div class="form-row full">
+          <div>
+            <label for="comment_${number}">Commentaire</label>
+            <textarea id="comment_${number}" name="comment_${number}" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function addReference() {
+    console.log('addReference called, referenceCount:', referenceCount, 'maxReferences:', maxReferences);
+    
+    if (referenceCount < maxReferences) {
+      referenceCount++;
+      const container = document.getElementById('referencesContainer');
+      
+      if (!container) {
+        console.error('referencesContainer not found!');
+        return;
+      }
+      
+      console.log('Adding reference section', referenceCount);
+      container.insertAdjacentHTML('beforeend', createReferenceSection(referenceCount));
+      
+      
+      // Show submit button when at least one reference is added
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) {
+        submitBtn.style.display = 'block';
+        console.log('Submit button shown');
+      }
+      
+      // Hide add button if we've reached the maximum
+      if (referenceCount >= maxReferences) {
+        const addBtn = document.getElementById('addReferenceBtn');
+        if (addBtn) {
+          addBtn.style.display = 'none';
+          console.log('Add button hidden - max references reached');
+        }
+      }
+    } else {
+      console.log('Maximum references reached, cannot add more');
+    }
+  }
+
+
+  // Add the first reference automatically when page loads and set up event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up event listeners');
+    
+    // Add event listener for the add reference button
+    const addBtn = document.getElementById('addReferenceBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', function(e) {
+        console.log('Add reference button clicked');
+        e.preventDefault();
+        addReference();
+      });
+      console.log('Event listener added to add button');
+    } else {
+      console.error('Add reference button not found!');
+    }
+    
+    // Add event listener for form submission
+    const form = document.getElementById('referencesForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        console.log('Form submission started');
+        
+        // Log all form data before submission
+        const formData = new FormData(form);
+        console.log('Form data being submitted:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+        
+        // Check if we have any reference data
+        let hasReferenceData = false;
+        for (let i = 1; i <= 3; i++) {
+          const name = form.querySelector(`input[name="referent_name_${i}"]`);
+          if (name && name.value.trim()) {
+            hasReferenceData = true;
+            console.log(`Reference ${i} has data:`, {
+              name: name.value,
+              email: form.querySelector(`input[name="referent_email_${i}"]`)?.value,
+              phone: form.querySelector(`input[name="referent_phone_${i}"]`)?.value,
+              corporation: form.querySelector(`input[name="corporation_name_${i}"]`)?.value
+            });
+          }
+        }
+        
+        if (!hasReferenceData) {
+          console.warn('No reference data found in form!');
+          e.preventDefault();
+          alert('Veuillez remplir au moins une référence complète avant de soumettre.');
+          return false;
+        }
+        
+        // Check if at least one reference is complete (has all required fields)
+        let hasCompleteReference = false;
+        for (let i = 1; i <= 3; i++) {
+          const name = form.querySelector(`input[name="referent_name_${i}"]`);
+          const email = form.querySelector(`input[name="referent_email_${i}"]`);
+          const phone = form.querySelector(`input[name="referent_phone_${i}"]`);
+          const corp = form.querySelector(`input[name="corporation_name_${i}"]`);
+          
+          if (name && name.value.trim() && 
+              email && email.value.trim() && 
+              phone && phone.value.trim() && 
+              corp && corp.value.trim()) {
+            hasCompleteReference = true;
+            console.log(`Complete reference found at position ${i}`);
+            break;
+          }
+        }
+        
+        if (!hasCompleteReference) {
+          console.warn('No complete reference found!');
+          e.preventDefault();
+          alert('Veuillez remplir au moins une référence complète (nom, email, téléphone et entreprise) avant de soumettre.');
+          return false;
+        }
+        
+        console.log('Form submission proceeding...');
+      });
+      console.log('Form submission listener added');
+    }
+    
+    
+    // Add the first reference automatically
+    addReference();
+    
+  });
+</script>
+{% endblock %}
