@@ -11,6 +11,11 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "changeme")
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split() if os.environ.get("ALLOWED_HOSTS") else ["*"]
 
+# CSRF trusted origins (add your deployed domains here)
+CSRF_TRUSTED_ORIGINS = [
+    "https://prisederef.exalt.studio",
+]
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
