@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Espace recruteur - eXalt{% endblock %}
+{% block title %}Candidats - eXalt{% endblock %}
 
 {% block content %}
-<h1>Espace recruteur</h1>
+<h1>Candidats</h1>
 
 <form method="post" action="">
   {% csrf_token %}
@@ -36,37 +36,4 @@
   </tbody>
 </table>
 
-{% if latest_references %}
-<div style="margin-top: 3rem;">
-  <h2>Dernières références créées</h2>
-  <div style="max-width: 100%; margin: 0 auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>Candidat</th>
-          <th>Référent</th>
-          <th>Entreprise</th>
-          <th>Email</th>
-          <th>Date de création</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for reference in latest_references %}
-        <tr>
-          <td>{{ reference.candidate.name }}</td>
-          <td>{{ reference.referent.name }}</td>
-          <td>{{ reference.corporation.name }}</td>
-          <td>{{ reference.referent.email }}</td>
-          <td>{{ reference.created_at|date:"d/m/Y H:i" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% else %}
-<div style="margin-top: 3rem;">
-  <p style="color: #6b7280; font-style: italic;">Aucune référence créée pour le moment.</p>
-</div>
-{% endif %}
 {% endblock %}

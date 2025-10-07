@@ -15,24 +15,18 @@ def recruiter_home(request: HttpRequest) -> HttpResponse:
         candidate_name = request.POST.get("candidate_name", "").strip()
         if candidate_name:
             Candidate.objects.create(name=candidate_name)
-            return redirect("recruiter_home")
+            return redirect("candidates")
     
     candidates = (
         Candidate.objects.annotate(num_refs=Count("references"))
         .order_by("name")
     )
     
-    # Get the latest 10 references
-    latest_references = Reference.objects.select_related(
-        'candidate', 'corporation', 'referent'
-    ).order_by('-created_at')[:10]
-    
     return render(
         request,
         "recruiter_home.html",
         {
             "candidates": candidates,
-            "latest_references": latest_references
         },
     )
 
@@ -138,35 +132,66 @@ def submit_reference(request: HttpRequest, token) -> HttpResponse:
 
 @login_required
 def references_view(request: HttpRequest) -> HttpResponse:
+    # Filters / search
+    q = request.GET.get("q", "").strip()
+
+    references_qs = (
+        Reference.objects.select_related("candidate", "corporation", "referent")
+        .prefetch_related("interactions")
+        .order_by("-created_at")
+    )
+
+    if q:
+        from django.db.models import Q
+
+        references_qs = references_qs.filter(
+            Q(candidate__name__icontains=q)
+            | Q(referent__name__icontains=q)
+            | Q(corporation__name__icontains=q)
+            | Q(referent__email__icontains=q)
+            | Q(referent__phone__icontains=q)
+        )
+
+    return render(
+        request,
+        "references.html",
+        {
+            "references": references_qs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+def reference_detail_view(request: HttpRequest, reference_id: int) -> HttpResponse:
+    """View individual reference details with interactions"""
+    try:
+        reference = Reference.objects.select_related(
+            'candidate', 'corporation', 'referent'
+        ).prefetch_related('interactions').get(id=reference_id)
+    except Reference.DoesNotExist:
+        messages.error(request, "Référence introuvable.")
+        return redirect("references")
+    
+    # Handle interaction logging
     if request.method == "POST":
-        reference_id = request.POST.get("reference_id")
         interaction_type = request.POST.get("interaction_type")
         comment = request.POST.get("comment", "").strip()
         feedback = request.POST.get("feedback", "").strip() or None
         
-        if reference_id and interaction_type:
-            try:
-                reference = Reference.objects.get(id=reference_id)
-                ReferenceInteraction.objects.create(
-                    reference=reference,
-                    recruiter=request.user,
-                    interaction_type=interaction_type,
-                    comment=comment,
-                    feedback=feedback
-                )
-                messages.success(request, f"Interaction enregistrée pour {reference.candidate.name}")
-            except Reference.DoesNotExist:
-                messages.error(request, "Référence introuvable.")
+        if interaction_type:
+            ReferenceInteraction.objects.create(
+                reference=reference,
+                recruiter=request.user,
+                interaction_type=interaction_type,
+                comment=comment,
+                feedback=feedback
+            )
+            messages.success(request, "Interaction enregistrée avec succès.")
+            return redirect("reference_detail", reference_id=reference_id)
         else:
-            messages.error(request, "Veuillez remplir tous les champs obligatoires.")
-        
-        return redirect("references")
+            messages.error(request, "Veuillez sélectionner un type d'interaction.")
     
-    # Get all references with their interactions
-    references = Reference.objects.select_related(
-        'candidate', 'corporation', 'referent'
-    ).prefetch_related('interactions').order_by('-created_at')
-    
-    return render(request, "references.html", {
-        "references": references
+    return render(request, "reference_detail.html", {
+        "reference": reference
     })

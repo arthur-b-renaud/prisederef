@@ -12,7 +12,7 @@
   <!-- Candidates Section -->
   <div>
     <h2>Gestion des candidats</h2>
-    <form method="post" action="{% url 'recruiter_home' %}" style="margin-bottom: 1.5rem;">
+    <form method="post" action="{% url 'candidates' %}" style="margin-bottom: 1.5rem;">
       {% csrf_token %}
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
         <input name="candidate_name" type="text" placeholder="Nom du candidat" required style="flex: 1;" />
@@ -63,7 +63,7 @@
 </div>
 
 <div style="text-align: center; margin-top: 2rem;">
-  <a href="{% url 'recruiter_home' %}" style="background: #5853ff; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+  <a href="{% url 'candidates' %}" style="background: #5853ff; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block;">
     Gérer les candidats →
   </a>
 </div>

@@ -425,7 +425,7 @@
         <nav class="sidebar">
           <ul class="sidebar-menu">
             <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">🏠 Accueil</a></li>
-            <li><a href="{% url 'recruiter_home' %}" class="{% if request.resolver_match.url_name == 'recruiter_home' %}active{% endif %}">👥 Candidats</a></li>
+            <li><a href="{% url 'candidates' %}" class="{% if request.resolver_match.url_name == 'candidates' %}active{% endif %}">👥 Candidats</a></li>
             <li><a href="{% url 'references' %}" class="{% if request.resolver_match.url_name == 'references' %}active{% endif %}">📞 Références</a></li>
             <li><a href="/admin/" target="_blank">⚙️ Administration</a></li>
             <li><a href="/health/">🔍 Health Check</a></li>
